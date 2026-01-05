@@ -98,6 +98,7 @@ export interface Reality {
   status: 'pending' | 'active' | 'ended';
   title: string;
   paragraphs: RealityParagraph[];
+  summary?: string;
   createdAt: number;
 }
 

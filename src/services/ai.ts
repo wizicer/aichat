@@ -171,16 +171,24 @@ function buildMessages(
     { role: 'system', content: systemPrompt }
   ];
 
-  // Get recent messages (exclude system messages)
+  // Get recent messages (include system messages for reality summaries, exclude reality invites)
   const recentMessages = messages
-    .filter(m => m.sender !== 'system' && m.type === 'text')
+    .filter(m => m.type !== 'reality')
     .slice(-maxHistory);
 
   for (const msg of recentMessages) {
-    result.push({
-      role: msg.sender === 'user' ? 'user' : 'assistant',
-      content: msg.content
-    });
+    // System messages (reality summaries) are added as assistant context
+    if (msg.sender === 'system') {
+      result.push({
+        role: 'assistant',
+        content: msg.content
+      });
+    } else {
+      result.push({
+        role: msg.sender === 'user' ? 'user' : 'assistant',
+        content: msg.content
+      });
+    }
   }
 
   return result;
@@ -440,7 +448,8 @@ export const aiService = {
     prompt += `请根据之前的对话内容，创建一个有趣的互动场景（现实）。这个场景应该：
 1. 与当前对话主题相关
 2. 有引人入胜的开场描述
-3. 提供2-3个有意义的选择
+3. 提供3-5个有意义的选择，让用户有更丰富的体验
+4. 最后一个选择应该是自然地结束这个场景的方式（不要生硬地说"结束互动"，而是用符合场景的说法）
 
 请使用以下JSON格式回复：
 \`\`\`json
@@ -451,12 +460,17 @@ export const aiService = {
   "choices": [
     {"id": "1", "label": "选项1"},
     {"id": "2", "label": "选项2"},
-    {"id": "end", "label": "结束互动，返回聊天"}
+    {"id": "3", "label": "选项3"},
+    {"id": "4", "label": "选项4（可选）"},
+    {"id": "end", "label": "用符合场景的自然方式表达离开/结束，例如：'告别离开'、'婉拒邀请'、'回到现实'等"}
   ]
 }
 \`\`\`
 
-注意：choices数组必须包含一个id为"end"的选项，让用户可以选择结束互动返回聊天。`;
+重要：
+- choices数组必须包含3-5个选项
+- 最后一个选项的id必须是"end"，但label要自然地融入场景，不要生硬
+- 每个选项都应该有明确的行动导向`;
 
     // Build messages with conversation history
     const apiMessages: { role: string; content: string }[] = [
@@ -583,12 +597,17 @@ export const aiService = {
   "choices": [
     {"id": "1", "label": "选项1"},
     {"id": "2", "label": "选项2"},
-    {"id": "end", "label": "结束互动，返回聊天"}
+    {"id": "3", "label": "选项3"},
+    {"id": "4", "label": "选项4（可选）"},
+    {"id": "end", "label": "用符合场景的自然方式表达离开/结束"}
   ]
 }
 \`\`\`
 
-重要：choices数组必须包含一个id为"end"的选项，让用户可以选择结束互动返回聊天。如果故事自然结束，可以只提供end选项。`;
+重要：
+- 提供3-5个选项让用户有更丰富的体验
+- 最后一个选项的id必须是"end"，但label要自然地融入场景（如"告别离开"、"回到日常"等），不要生硬
+- 如果故事自然结束，可以只提供一个自然的end选项`;
 
     const apiMessages = [
       { role: 'system', content: context },
@@ -689,5 +708,73 @@ export const aiService = {
         message: error instanceof Error ? error.message : '连接失败'
       };
     }
+  },
+
+  // Generate summary for ended reality
+  async summarizeReality(
+    settings: Settings,
+    character: Character,
+    realityTitle: string,
+    paragraphs: { content: string; chosenLabel?: string }[]
+  ): Promise<string> {
+    if (!settings.apiKey) {
+      throw new Error('请先在设置中配置API密钥');
+    }
+
+    const context = `你是${character.name}。请为以下互动场景生成一个简洁的总结（50-100字），用于后续对话的上下文参考。
+
+场景标题：${realityTitle}
+
+剧情经过：
+${paragraphs.map((p, i) => {
+  let text = `${i + 1}. ${p.content}`;
+  if (p.chosenLabel) {
+    text += `\n   [用户选择: ${p.chosenLabel}]`;
+  }
+  return text;
+}).join('\n\n')}
+
+请用第一人称（我）的视角，简洁地总结这段经历的关键内容和结果。只需要总结内容，不要有任何前缀或解释。`;
+
+    const apiMessages = [
+      { role: 'system', content: context },
+      { role: 'user', content: '请生成总结' }
+    ];
+
+    let result: { content: string; usage?: { prompt: number; completion: number; total: number } };
+
+    if (settings.provider === 'gemini') {
+      result = await callGemini(
+        settings.apiEndpoint,
+        settings.apiKey,
+        settings.model,
+        apiMessages
+      );
+    } else {
+      result = await callOpenAICompatible(
+        settings.apiEndpoint,
+        settings.apiKey,
+        settings.model,
+        apiMessages
+      );
+    }
+
+    // Record token usage
+    const promptTokens = result.usage?.prompt || 0;
+    const completionTokens = result.usage?.completion || 0;
+    const totalTokens = result.usage?.total || 0;
+    
+    if (totalTokens > 0) {
+      await recordTokenUsage(
+        character.id,
+        character.name,
+        settings.provider,
+        promptTokens,
+        completionTokens,
+        totalTokens
+      );
+    }
+
+    return result.content.trim();
   }
 };

@@ -18,7 +18,7 @@ export function RealityDetail() {
   const [showDebugInfo, setShowDebugInfo] = useState(false);
 
   const { currentReality, loadReality, selectChoice, addParagraph, acceptReality, rejectReality, endReality } = useRealityStore();
-  const { currentChat, loadChat } = useChatStore();
+  const { currentChat, loadChat, addMessage } = useChatStore();
   const { getCharacter } = useCharacterStore();
   const { settings, loadSettings } = useSettingsStore();
   const { entries: loreBooks, loadEntries: loadLoreBooks } = useLoreBookStore();
@@ -51,11 +51,53 @@ export function RealityDetail() {
     const lastParagraph = currentReality.paragraphs[currentReality.paragraphs.length - 1];
     if (!lastParagraph) return;
 
-    // Handle 'end' choice - end reality and go back to chat
+    // Handle 'end' choice - generate summary, end reality and go back to chat
     if (choiceId === 'end') {
-      await selectChoice(lastParagraph.id, choiceId);
-      await endReality();
-      navigate(`/chat/${id}`);
+      setLoading(true);
+      setError(null);
+      
+      try {
+        await selectChoice(lastParagraph.id, choiceId);
+        
+        // Get character for summary generation
+        const character = await getCharacter(currentChat.characterId);
+        if (character && settings) {
+          // Build paragraph history including the end choice
+          const paragraphHistory = currentReality.paragraphs.map(p => ({
+            content: p.content,
+            chosenLabel: p.choices?.find(c => c.id === p.chosenId)?.label
+          }));
+          paragraphHistory[paragraphHistory.length - 1].chosenLabel = choiceLabel;
+          
+          // Generate summary
+          const summary = await aiService.summarizeReality(
+            settings,
+            character,
+            currentReality.title,
+            paragraphHistory
+          );
+          
+          // End reality with summary
+          await endReality(summary);
+          
+          // Add summary as system message in chat
+          await addMessage({
+            chatId: currentChat.id,
+            sender: 'system',
+            type: 'text',
+            content: `[${currentReality.title}] ${summary}`,
+            recalled: false
+          });
+        } else {
+          await endReality();
+        }
+        
+        navigate(`/chat/${id}`);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : '结束失败');
+      } finally {
+        setLoading(false);
+      }
       return;
     }
 

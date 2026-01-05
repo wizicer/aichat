@@ -135,6 +135,25 @@ export function ChatDetail() {
     const isUser = message.sender === 'user';
     const isSystem = message.sender === 'system';
 
+    // Reality messages are displayed as centered system-style messages
+    if (message.type === 'reality') {
+      return (
+        <div key={message.id} className="flex justify-center my-4">
+          <button
+            onClick={() => message.metadata?.realityId && handleRealityClick(message.metadata.realityId)}
+            className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-5 py-3 rounded-xl shadow-lg hover:shadow-xl transition-shadow"
+          >
+            <div className="flex items-center gap-2 mb-1">
+              <Sparkles size={18} />
+              <span className="font-medium">现实邀请</span>
+            </div>
+            <p className="text-sm opacity-90">{message.content}</p>
+            <p className="text-xs mt-2 opacity-75">点击进入互动场景</p>
+          </button>
+        </div>
+      );
+    }
+
     if (isSystem) {
       return (
         <div key={message.id} className="flex justify-center my-2">
@@ -156,31 +175,17 @@ export function ChatDetail() {
           size="md"
         />
         <div className={`flex flex-col ${isUser ? 'items-end' : 'items-start'} max-w-[70%]`}>
-          {message.type === 'reality' ? (
-            <button
-              onClick={() => message.metadata?.realityId && handleRealityClick(message.metadata.realityId)}
-              className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-3 rounded-xl"
-            >
-              <div className="flex items-center gap-2 mb-1">
-                <Sparkles size={16} />
-                <span className="font-medium">现实邀请</span>
-              </div>
-              <p className="text-sm opacity-90">{message.content}</p>
-              <p className="text-xs mt-2 opacity-75">点击查看详情</p>
-            </button>
-          ) : (
-            <div
-              className={`
-                px-3 py-2 rounded-xl
-                ${isUser 
-                  ? 'bg-primary text-white rounded-tr-sm' 
-                  : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-tl-sm'
-                }
-              `}
-            >
-              <p className="whitespace-pre-wrap break-words">{message.content}</p>
-            </div>
-          )}
+          <div
+            className={`
+              px-3 py-2 rounded-xl
+              ${isUser 
+                ? 'bg-primary text-white rounded-tr-sm' 
+                : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-tl-sm'
+              }
+            `}
+          >
+            <p className="whitespace-pre-wrap break-words">{message.content}</p>
+          </div>
           <span className="text-xs text-gray-400 mt-1">
             {formatTime(message.timestamp)}
           </span>

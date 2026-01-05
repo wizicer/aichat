@@ -10,7 +10,7 @@ interface RealityState {
   createReality: (chatId: string, title: string, firstParagraph: string, choices?: { id: string; label: string }[]) => Promise<Reality>;
   addParagraph: (paragraph: RealityParagraph) => Promise<void>;
   selectChoice: (paragraphId: string, choiceId: string) => Promise<void>;
-  endReality: () => Promise<void>;
+  endReality: (summary?: string) => Promise<void>;
   acceptReality: (id: string) => Promise<void>;
   rejectReality: (id: string) => Promise<void>;
 }
@@ -67,13 +67,18 @@ export const useRealityStore = create<RealityState>((set, get) => ({
     });
   },
 
-  endReality: async () => {
+  endReality: async (summary) => {
     const reality = get().currentReality;
     if (!reality) return;
     
-    await dbHelpers.updateReality(reality.id, { status: 'ended' });
+    const updates: Partial<Reality> = { status: 'ended' };
+    if (summary) {
+      updates.summary = summary;
+    }
+    
+    await dbHelpers.updateReality(reality.id, updates);
     set({
-      currentReality: { ...reality, status: 'ended' }
+      currentReality: { ...reality, ...updates }
     });
   },
 
