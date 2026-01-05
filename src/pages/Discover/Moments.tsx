@@ -9,7 +9,7 @@ import type { Moment } from '@/types';
 export function Moments() {
   const { moments, loadMoments, createMoment, toggleLike, addComment } = useMomentStore();
   const { profile, loadProfile } = useUserStore();
-  const { characters, loadCharacters } = useCharacterStore();
+  const { loadCharacters } = useCharacterStore();
   
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newContent, setNewContent] = useState('');

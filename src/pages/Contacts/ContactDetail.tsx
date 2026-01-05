@@ -16,7 +16,7 @@ export function ContactDetail() {
 
   useEffect(() => {
     if (id) {
-      getCharacter(id).then(setCharacter);
+      getCharacter(id).then((char) => setCharacter(char || null));
       loadChats();
     }
   }, [id, getCharacter, loadChats]);

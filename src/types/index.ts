@@ -123,6 +123,7 @@ export interface Settings {
   darkMode: boolean;
   fontSize: number;
   notifications: boolean;
+  debugMode: boolean;
 }
 
 // User profile
@@ -168,3 +169,35 @@ export interface AIRealityResponse {
 }
 
 export type AIResponse = AITextResponse | AIRealityResponse;
+
+// Debug info for AI responses (in-memory only)
+export interface AIDebugInfo {
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+  prompt: { role: string; content: string }[];
+  rawResponse: string;
+  timestamp: number;
+}
+
+// Extended AI response with debug info
+export interface AIResponseWithDebug {
+  response: AIResponse;
+  debug?: AIDebugInfo;
+}
+
+// Predefined character templates
+export interface CharacterTemplate {
+  name: string;
+  avatar: string;
+  bio: string;
+  persona: string;
+}
+
+// Predefined lore templates
+export interface LoreTemplate {
+  name: string;
+  content: string;
+  category: string;
+  priority: number;
+}

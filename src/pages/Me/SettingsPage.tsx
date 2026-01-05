@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Key, Moon, Type, Bell, Download, Upload, Trash2, ChevronRight } from 'lucide-react';
+import { Key, Moon, Type, Bell, Download, Upload, Trash2, ChevronRight, Bug } from 'lucide-react';
 import { useSettingsStore } from '@/stores';
 import { PageHeader } from '@/components/layout';
 import { Switch } from '@/components/ui';
@@ -24,6 +24,10 @@ export function SettingsPage() {
 
   const handleNotificationsToggle = (checked: boolean) => {
     updateSettings({ notifications: checked });
+  };
+
+  const handleDebugModeToggle = (checked: boolean) => {
+    updateSettings({ debugMode: checked });
   };
 
   const handleExport = async () => {
@@ -157,7 +161,7 @@ export function SettingsPage() {
             <span className="flex-1 text-gray-900 dark:text-gray-100">字体大小</span>
             <span className="text-gray-500">{settings?.fontSize || 16}px</span>
           </div>
-          <div className="flex items-center gap-4 px-4 py-4">
+          <div className="flex items-center gap-4 px-4 py-4 border-b border-gray-100 dark:border-gray-800">
             <div className="w-10 h-10 rounded-lg bg-orange-100 dark:bg-orange-900 flex items-center justify-center text-orange-500">
               <Bell size={24} />
             </div>
@@ -165,6 +169,19 @@ export function SettingsPage() {
             <Switch
               checked={settings?.notifications || false}
               onChange={handleNotificationsToggle}
+            />
+          </div>
+          <div className="flex items-center gap-4 px-4 py-4">
+            <div className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-500">
+              <Bug size={24} />
+            </div>
+            <div className="flex-1">
+              <span className="text-gray-900 dark:text-gray-100">调试模式</span>
+              <p className="text-xs text-gray-500">显示Token用量和API详情</p>
+            </div>
+            <Switch
+              checked={settings?.debugMode || false}
+              onChange={handleDebugModeToggle}
             />
           </div>
         </div>

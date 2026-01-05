@@ -65,7 +65,8 @@ export async function initializeDB() {
       model: 'gpt-4o-mini',
       darkMode: false,
       fontSize: 16,
-      notifications: true
+      notifications: true,
+      debugMode: false
     });
   }
 }

@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Plus, Edit, Trash2, ToggleLeft, ToggleRight } from 'lucide-react';
+import { Plus, Edit, Trash2, ToggleLeft, ToggleRight, Sparkles } from 'lucide-react';
 import { useLoreBookStore } from '@/stores';
 import { Button, Modal, Input, TextArea, Select } from '@/components/ui';
 import { PageHeader } from '@/components/layout';
-import type { LoreBook as LoreBookType } from '@/types';
+import { PREDEFINED_LORE } from '@/services/ai';
+import type { LoreBook as LoreBookType, LoreTemplate } from '@/types';
 
 const CATEGORIES = [
   { value: '世界观', label: '世界观' },
@@ -24,10 +25,22 @@ export function LoreBook() {
   const [category, setCategory] = useState('世界观');
   const [priority, setPriority] = useState(0);
   const [filterCategory, setFilterCategory] = useState<string | null>(null);
+  const [showTemplates, setShowTemplates] = useState(false);
 
   useEffect(() => {
     loadEntries();
   }, [loadEntries]);
+
+  const applyTemplate = async (template: LoreTemplate) => {
+    await createEntry({
+      name: template.name,
+      content: template.content,
+      category: template.category,
+      priority: template.priority,
+      enabled: true
+    });
+    setShowTemplates(false);
+  };
 
   const filteredEntries = filterCategory
     ? entries.filter(e => e.category === filterCategory)
@@ -96,6 +109,38 @@ export function LoreBook() {
       />
 
       <div className="flex-1 overflow-y-auto">
+        {/* Quick templates */}
+        <div className="mx-4 mt-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="font-medium text-purple-900 dark:text-purple-300 flex items-center gap-2">
+              <Sparkles size={16} /> 快速添加
+            </span>
+            <button
+              onClick={() => setShowTemplates(!showTemplates)}
+              className="text-sm text-purple-600 dark:text-purple-400"
+            >
+              {showTemplates ? '收起' : '展开模板'}
+            </button>
+          </div>
+          {showTemplates && (
+            <div className="space-y-2 mt-3">
+              {PREDEFINED_LORE.map((template, index) => (
+                <button
+                  key={index}
+                  onClick={() => applyTemplate(template)}
+                  className="w-full text-left p-3 bg-white dark:bg-gray-800 rounded-lg hover:ring-2 hover:ring-purple-500 transition-all"
+                >
+                  <div className="flex items-center justify-between">
+                    <p className="font-medium text-gray-900 dark:text-gray-100">{template.name}</p>
+                    <span className="text-xs px-2 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-gray-500">{template.category}</span>
+                  </div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">{template.content}</p>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
         {/* Category filter */}
         <div className="flex gap-2 p-4 overflow-x-auto">
           <button

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Chat, Message, Character, Reality } from '@/types';
+import type { Chat, Message, Character } from '@/types';
 import { dbHelpers, db } from '@/services/db';
 
 interface ChatState {

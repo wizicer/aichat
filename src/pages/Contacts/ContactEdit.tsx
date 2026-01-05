@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useCharacterStore } from '@/stores';
 import { Button, Input, TextArea, Avatar } from '@/components/ui';
 import { PageHeader } from '@/components/layout';
+import { PREDEFINED_CHARACTERS } from '@/services/ai';
+import type { CharacterTemplate } from '@/types';
 
 export function ContactEdit() {
   const { id } = useParams<{ id: string }>();
@@ -16,6 +18,15 @@ export function ContactEdit() {
   const [bio, setBio] = useState('');
   const [persona, setPersona] = useState('');
   const [saving, setSaving] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
+
+  const applyTemplate = (template: CharacterTemplate) => {
+    setName(template.name);
+    setAvatar(template.avatar);
+    setBio(template.bio);
+    setPersona(template.persona);
+    setShowTemplates(false);
+  };
 
   useEffect(() => {
     if (!isNew && id) {
@@ -75,6 +86,35 @@ export function ContactEdit() {
       />
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {/* Quick templates */}
+        {isNew && (
+          <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="font-medium text-purple-900 dark:text-purple-300">✨ 快速创建</span>
+              <button
+                onClick={() => setShowTemplates(!showTemplates)}
+                className="text-sm text-purple-600 dark:text-purple-400"
+              >
+                {showTemplates ? '收起' : '选择模板'}
+              </button>
+            </div>
+            {showTemplates && (
+              <div className="grid grid-cols-2 gap-2 mt-3">
+                {PREDEFINED_CHARACTERS.map((template, index) => (
+                  <button
+                    key={index}
+                    onClick={() => applyTemplate(template)}
+                    className="text-left p-3 bg-white dark:bg-gray-800 rounded-lg hover:ring-2 hover:ring-purple-500 transition-all"
+                  >
+                    <p className="font-medium text-gray-900 dark:text-gray-100">{template.name}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{template.bio}</p>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Avatar preview */}
         <div className="flex justify-center py-4">
           <Avatar src={avatar} name={name || '?'} size="xl" />

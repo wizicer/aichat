@@ -64,7 +64,7 @@ export function RealityDetail() {
       paragraphHistory[paragraphHistory.length - 1].chosenLabel = choiceLabel;
 
       // Continue reality
-      const response = await aiService.continueReality(
+      const { response } = await aiService.continueReality(
         settings,
         character,
         currentReality.title,
@@ -140,7 +140,7 @@ export function RealityDetail() {
         {/* Active or ended state */}
         {(currentReality.status === 'active' || currentReality.status === 'ended') && (
           <div className="space-y-6">
-            {currentReality.paragraphs.map((paragraph, index) => (
+            {currentReality.paragraphs.map((paragraph) => (
               <div key={paragraph.id} className="animate-fade-in">
                 <p className="text-white leading-relaxed whitespace-pre-wrap">
                   {paragraph.content}
