@@ -306,11 +306,13 @@ interface Reality {
 // 用户设置
 interface Settings {
   id: string;
+  provider: 'openai' | 'gemini' | 'deepseek' | 'moonshot' | 'custom';
   apiEndpoint: string;
   apiKey: string;
   model: string;
   darkMode: boolean;
   fontSize: number;
+  notifications: boolean;
 }
 
 // 用户资料
@@ -348,6 +350,16 @@ interface UserProfile {
 ---
 
 ## 7. AI集成
+
+### 7.0 支持的API提供商
+
+| 提供商 | 端点 | 支持的模型 |
+|--------|------|-----------|
+| **OpenAI (ChatGPT)** | https://api.openai.com/v1 | gpt-4o, gpt-4o-mini, gpt-4-turbo, gpt-3.5-turbo |
+| **Google Gemini** | https://generativelanguage.googleapis.com/v1beta | gemini-1.5-pro, gemini-1.5-flash, gemini-2.0-flash-exp |
+| **DeepSeek** | https://api.deepseek.com/v1 | deepseek-chat, deepseek-reasoner |
+| **Moonshot (月之暗面)** | https://api.moonshot.cn/v1 | moonshot-v1-8k, moonshot-v1-32k, moonshot-v1-128k |
+| **自定义** | 用户自定义 | 用户自定义（支持OpenAI兼容API） |
 
 ### 7.1 基础提示结构
 ```
