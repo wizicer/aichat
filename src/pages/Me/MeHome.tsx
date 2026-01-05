@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Wallet, Settings, ChevronRight } from 'lucide-react';
+import { Wallet, Settings, ChevronRight, BarChart3 } from 'lucide-react';
 import { useUserStore, useSettingsStore } from '@/stores';
 import { Avatar } from '@/components/ui';
 import { PageHeader } from '@/components/layout';
@@ -21,6 +21,12 @@ export function MeHome() {
       label: '钱包',
       path: '/me/wallet',
       color: 'text-yellow-500'
+    },
+    {
+      icon: BarChart3,
+      label: 'Token 用量',
+      path: '/me/tokens',
+      color: 'text-blue-500'
     },
     {
       icon: Settings,

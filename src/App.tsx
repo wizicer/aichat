@@ -8,7 +8,7 @@ import { useSettingsStore } from '@/stores';
 import { ChatList, ChatDetail, RealityDetail } from '@/pages/Chat';
 import { ContactList, ContactDetail, ContactEdit } from '@/pages/Contacts';
 import { DiscoverHome, Moments, LoreBook } from '@/pages/Discover';
-import { MeHome, ProfileEdit, Wallet, SettingsPage, APISettings } from '@/pages/Me';
+import { MeHome, ProfileEdit, Wallet, SettingsPage, APISettings, TokenStatsPage } from '@/pages/Me';
 
 // Routes that show the tab bar
 const TAB_ROUTES = ['/chat', '/contacts', '/discover', '/me'];
@@ -62,6 +62,7 @@ function App() {
           <Route path="/me" element={<MeHome />} />
           <Route path="/me/profile" element={<ProfileEdit />} />
           <Route path="/me/wallet" element={<Wallet />} />
+          <Route path="/me/tokens" element={<TokenStatsPage />} />
           <Route path="/me/settings" element={<SettingsPage />} />
           <Route path="/me/settings/api" element={<APISettings />} />
         </Routes>

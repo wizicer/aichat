@@ -1,15 +1,21 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useRealityStore, useChatStore, useCharacterStore, useSettingsStore, useLoreBookStore } from '@/stores';
 import { Button } from '@/components/ui';
 import { PageHeader } from '@/components/layout';
 import { aiService } from '@/services/ai';
+import type { AIDebugInfo } from '@/types';
 
 export function RealityDetail() {
   const { id, rid } = useParams<{ id: string; rid: string }>();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Debug info (in-memory only)
+  const [lastDebugInfo, setLastDebugInfo] = useState<AIDebugInfo | null>(null);
+  const [showDebugInfo, setShowDebugInfo] = useState(false);
 
   const { currentReality, loadReality, selectChoice, addParagraph, acceptReality, rejectReality, endReality } = useRealityStore();
   const { currentChat, loadChat } = useChatStore();
@@ -45,6 +51,14 @@ export function RealityDetail() {
     const lastParagraph = currentReality.paragraphs[currentReality.paragraphs.length - 1];
     if (!lastParagraph) return;
 
+    // Handle 'end' choice - end reality and go back to chat
+    if (choiceId === 'end') {
+      await selectChoice(lastParagraph.id, choiceId);
+      await endReality();
+      navigate(`/chat/${id}`);
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -63,14 +77,20 @@ export function RealityDetail() {
       }));
       paragraphHistory[paragraphHistory.length - 1].chosenLabel = choiceLabel;
 
-      // Continue reality
-      const { response } = await aiService.continueReality(
+      // Continue reality with debug info if enabled
+      const includeDebug = settings.debugMode || false;
+      const { response, debug } = await aiService.continueReality(
         settings,
         character,
         currentReality.title,
         paragraphHistory,
-        loreBooks
+        loreBooks,
+        includeDebug
       );
+      
+      if (debug) {
+        setLastDebugInfo(debug);
+      }
 
       if (response.type === 'reality') {
         // Add new paragraph
@@ -178,6 +198,35 @@ export function RealityDetail() {
         </div>
       )}
 
+      {/* Debug info display */}
+      {settings?.debugMode && lastDebugInfo && (
+        <div className="px-4 py-2 border-t border-gray-700 bg-gray-800/50">
+          <button
+            onClick={() => setShowDebugInfo(!showDebugInfo)}
+            className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-300"
+          >
+            <span>Token: {lastDebugInfo.totalTokens} ({lastDebugInfo.promptTokens}+{lastDebugInfo.completionTokens})</span>
+            {showDebugInfo ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+          </button>
+          {showDebugInfo && (
+            <div className="mt-2 p-2 bg-gray-900/50 rounded text-xs overflow-auto max-h-40">
+              <div className="mb-2">
+                <strong className="text-gray-300">Prompt:</strong>
+                <pre className="whitespace-pre-wrap mt-1 text-gray-400">
+                  {lastDebugInfo.prompt.map((m) => `[${m.role}]: ${m.content.slice(0, 150)}${m.content.length > 150 ? '...' : ''}`).join('\n\n')}
+                </pre>
+              </div>
+              <div>
+                <strong className="text-gray-300">Raw Response:</strong>
+                <pre className="whitespace-pre-wrap mt-1 text-gray-400">
+                  {lastDebugInfo.rawResponse}
+                </pre>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Choices */}
       {showChoices && lastParagraph?.choices && (
         <div className="p-4 bg-gray-800/50 border-t border-gray-700 safe-bottom">
@@ -185,10 +234,13 @@ export function RealityDetail() {
             {lastParagraph.choices.map((choice) => (
               <Button
                 key={choice.id}
-                variant="secondary"
+                variant={choice.id === 'end' ? 'secondary' : 'secondary'}
                 onClick={() => handleChoice(choice.id, choice.label)}
                 disabled={loading}
-                className="!bg-white/10 !text-white hover:!bg-white/20"
+                className={choice.id === 'end' 
+                  ? '!bg-red-500/20 !text-red-300 hover:!bg-red-500/30 !border-red-500/50' 
+                  : '!bg-white/10 !text-white hover:!bg-white/20'
+                }
               >
                 {choice.label}
               </Button>

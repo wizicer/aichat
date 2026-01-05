@@ -4,7 +4,7 @@ import { useCharacterStore } from '@/stores';
 import { Button, Input, TextArea, Avatar } from '@/components/ui';
 import { PageHeader } from '@/components/layout';
 import { PREDEFINED_CHARACTERS } from '@/services/ai';
-import type { CharacterTemplate } from '@/types';
+import type { CharacterTemplate, Character } from '@/types';
 
 export function ContactEdit() {
   const { id } = useParams<{ id: string }>();
@@ -30,7 +30,7 @@ export function ContactEdit() {
 
   useEffect(() => {
     if (!isNew && id) {
-      getCharacter(id).then((char) => {
+      getCharacter(id).then((char: Character | undefined) => {
         if (char) {
           setName(char.name);
           setAvatar(char.avatar);

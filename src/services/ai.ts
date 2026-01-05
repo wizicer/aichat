@@ -1,4 +1,30 @@
 import type { AIProvider, AIResponse, AIResponseWithDebug, AIDebugInfo, Settings, Character, Message, LoreBook, CharacterTemplate, LoreTemplate } from '@/types';
+import { db } from '@/services/db';
+
+// Record token usage to database
+async function recordTokenUsage(
+  characterId: string,
+  characterName: string,
+  provider: AIProvider,
+  promptTokens: number,
+  completionTokens: number,
+  totalTokens: number
+): Promise<void> {
+  try {
+    await db.tokenUsage.add({
+      id: crypto.randomUUID(),
+      characterId,
+      characterName,
+      provider,
+      promptTokens,
+      completionTokens,
+      totalTokens,
+      timestamp: Date.now()
+    });
+  } catch (error) {
+    console.error('Failed to record token usage:', error);
+  }
+}
 
 // Predefined character templates
 export const PREDEFINED_CHARACTERS: CharacterTemplate[] = [
@@ -345,15 +371,39 @@ export const aiService = {
       );
     }
 
-    const response = parseAIResponse(result.content);
+    let response = parseAIResponse(result.content);
+    
+    // Ensure there's always an 'end' option in reality responses
+    if (response.type === 'reality' && response.choices) {
+      const hasEndOption = response.choices.some(c => c.id === 'end');
+      if (!hasEndOption) {
+        response.choices.push({ id: 'end', label: '结束互动，返回聊天' });
+      }
+    }
+    
+    // Record token usage
+    const promptTokens = result.usage?.prompt || 0;
+    const completionTokens = result.usage?.completion || 0;
+    const totalTokens = result.usage?.total || 0;
+    
+    if (totalTokens > 0) {
+      await recordTokenUsage(
+        character.id,
+        character.name,
+        settings.provider,
+        promptTokens,
+        completionTokens,
+        totalTokens
+      );
+    }
     
     // Build debug info if requested
     let debug: AIDebugInfo | undefined;
     if (includeDebug) {
       debug = {
-        promptTokens: result.usage?.prompt || 0,
-        completionTokens: result.usage?.completion || 0,
-        totalTokens: result.usage?.total || 0,
+        promptTokens,
+        completionTokens,
+        totalTokens,
         prompt: apiMessages,
         rawResponse: result.content,
         timestamp: Date.now()
@@ -400,10 +450,13 @@ export const aiService = {
   "paragraph": "场景描述内容（100-200字）",
   "choices": [
     {"id": "1", "label": "选项1"},
-    {"id": "2", "label": "选项2"}
+    {"id": "2", "label": "选项2"},
+    {"id": "end", "label": "结束互动，返回聊天"}
   ]
 }
-\`\`\``;
+\`\`\`
+
+注意：choices数组必须包含一个id为"end"的选项，让用户可以选择结束互动返回聊天。`;
 
     // Build messages with conversation history
     const apiMessages: { role: string; content: string }[] = [
@@ -445,14 +498,38 @@ export const aiService = {
       );
     }
 
-    const response = parseAIResponse(result.content);
+    let response = parseAIResponse(result.content);
+    
+    // Ensure there's always an 'end' option in reality responses
+    if (response.type === 'reality' && response.choices) {
+      const hasEndOption = response.choices.some(c => c.id === 'end');
+      if (!hasEndOption) {
+        response.choices.push({ id: 'end', label: '结束互动，返回聊天' });
+      }
+    }
+    
+    // Record token usage
+    const promptTokens = result.usage?.prompt || 0;
+    const completionTokens = result.usage?.completion || 0;
+    const totalTokens = result.usage?.total || 0;
+    
+    if (totalTokens > 0) {
+      await recordTokenUsage(
+        character.id,
+        character.name,
+        settings.provider,
+        promptTokens,
+        completionTokens,
+        totalTokens
+      );
+    }
     
     let debug: AIDebugInfo | undefined;
     if (includeDebug) {
       debug = {
-        promptTokens: result.usage?.prompt || 0,
-        completionTokens: result.usage?.completion || 0,
-        totalTokens: result.usage?.total || 0,
+        promptTokens,
+        completionTokens,
+        totalTokens,
         prompt: apiMessages,
         rawResponse: result.content,
         timestamp: Date.now()
@@ -505,12 +582,13 @@ export const aiService = {
   "paragraph": "继续的剧情内容",
   "choices": [
     {"id": "1", "label": "选项1"},
-    {"id": "2", "label": "选项2"}
+    {"id": "2", "label": "选项2"},
+    {"id": "end", "label": "结束互动，返回聊天"}
   ]
 }
 \`\`\`
 
-如果故事应该结束，可以不提供choices数组或提供空数组。`;
+重要：choices数组必须包含一个id为"end"的选项，让用户可以选择结束互动返回聊天。如果故事自然结束，可以只提供end选项。`;
 
     const apiMessages = [
       { role: 'system', content: context },
@@ -535,14 +613,38 @@ export const aiService = {
       );
     }
 
-    const response = parseAIResponse(result.content);
+    let response = parseAIResponse(result.content);
+    
+    // Ensure there's always an 'end' option in reality responses
+    if (response.type === 'reality' && response.choices) {
+      const hasEndOption = response.choices.some(c => c.id === 'end');
+      if (!hasEndOption) {
+        response.choices.push({ id: 'end', label: '结束互动，返回聊天' });
+      }
+    }
+    
+    // Record token usage
+    const promptTokens = result.usage?.prompt || 0;
+    const completionTokens = result.usage?.completion || 0;
+    const totalTokens = result.usage?.total || 0;
+    
+    if (totalTokens > 0) {
+      await recordTokenUsage(
+        character.id,
+        character.name,
+        settings.provider,
+        promptTokens,
+        completionTokens,
+        totalTokens
+      );
+    }
     
     let debug: AIDebugInfo | undefined;
     if (includeDebug) {
       debug = {
-        promptTokens: result.usage?.prompt || 0,
-        completionTokens: result.usage?.completion || 0,
-        totalTokens: result.usage?.total || 0,
+        promptTokens,
+        completionTokens,
+        totalTokens,
         prompt: apiMessages,
         rawResponse: result.content,
         timestamp: Date.now()

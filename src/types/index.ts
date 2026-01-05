@@ -201,3 +201,26 @@ export interface LoreTemplate {
   category: string;
   priority: number;
 }
+
+// Token usage tracking (persistent)
+export interface TokenUsage {
+  id: string;
+  characterId: string;  // Character ID or 'system' for non-character usage
+  characterName: string;
+  provider: AIProvider;
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+  timestamp: number;
+}
+
+// Aggregated token stats
+export interface TokenStats {
+  characterId: string;
+  characterName: string;
+  provider: AIProvider;
+  totalPromptTokens: number;
+  totalCompletionTokens: number;
+  totalTokens: number;
+  requestCount: number;
+}

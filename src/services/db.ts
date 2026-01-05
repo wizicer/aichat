@@ -8,7 +8,8 @@ import type {
   Reality,
   Settings,
   UserProfile,
-  Transaction
+  Transaction,
+  TokenUsage
 } from '@/types';
 
 export class AIChatDB extends Dexie {
@@ -21,6 +22,7 @@ export class AIChatDB extends Dexie {
   settings!: Table<Settings>;
   userProfile!: Table<UserProfile>;
   transactions!: Table<Transaction>;
+  tokenUsage!: Table<TokenUsage>;
 
   constructor() {
     super('AIChatDB');
@@ -33,7 +35,8 @@ export class AIChatDB extends Dexie {
       realities: 'id, chatId, status, createdAt',
       settings: 'id',
       userProfile: 'id',
-      transactions: 'id, type, timestamp'
+      transactions: 'id, type, timestamp',
+      tokenUsage: 'id, characterId, provider, timestamp'
     });
   }
 }

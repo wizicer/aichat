@@ -4,7 +4,7 @@ import { MessageCircle, Edit, Trash2 } from 'lucide-react';
 import { useCharacterStore, useChatStore } from '@/stores';
 import { Avatar, Button, Modal } from '@/components/ui';
 import { PageHeader } from '@/components/layout';
-import type { Character } from '@/types';
+import type { Character, Chat } from '@/types';
 
 export function ContactDetail() {
   const { id } = useParams<{ id: string }>();
@@ -16,7 +16,7 @@ export function ContactDetail() {
 
   useEffect(() => {
     if (id) {
-      getCharacter(id).then((char) => setCharacter(char || null));
+      getCharacter(id).then((char: Character | undefined) => setCharacter(char || null));
       loadChats();
     }
   }, [id, getCharacter, loadChats]);
@@ -25,7 +25,7 @@ export function ContactDetail() {
     if (!character) return;
     
     // Check if chat already exists
-    const existingChat = chats.find(c => c.characterId === character.id);
+    const existingChat = chats.find((c: Chat) => c.characterId === character.id);
     if (existingChat) {
       navigate(`/chat/${existingChat.id}`);
     } else {
