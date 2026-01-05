@@ -4,6 +4,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 import path from 'path'
 
 export default defineConfig({
+  base: process.env.NODE_ENV === 'production' ? '/aichat/' : '/',
   plugins: [
     react(),
     VitePWA({
